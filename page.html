@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Expense Tracker</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+  <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+  <div class="container mt-3">
+    <h1 class="text-center mb-3">Expense Tracker</h1>
+
+    <!-- Add expense form -->
+    <form id="add-expense-form" class="mb-3">
+      <div class="form-group">
+        <label for="description">Description:</label>
+        <input type="text" class="form-control" id="description" required>
+      </div>
+      <div class="form-group">
+        <label for="amount">Amount:</label>
+        <input type="number" class="form-control" id="amount" required>
+      </div>
+      <div class="form-group">
+        <label for="date">Date:</label>
+        <input type="date" class="form-control" id="date" required>
+      </div>
+      <button type="submit" class="btn btn-primary">Add Expense</button>
+    </form>
+
+    <!-- Filter expenses by date range -->
+    <div class="row mb-3">
+      <div class="col-sm">
+        <input type="date" class="form-control" id="from-date" placeholder="From Date">
+      </div>
+      <div class="col-sm">
+        <input type="date" class="form-control" id="to-date" placeholder="To Date">
+      </div>
+      <div class="col-sm">
+        <button class="btn btn-secondary" onclick="filterExpenses()">Filter</button>
+        <button class="btn btn-secondary" onclick="displayExpenses()">Reset</button>
+      </div>
+    </div>
+
+    <!-- Expenses table -->
+    <table class="table table-striped table-bordered">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Description</th>
+          <th>Amount</th>
+          <th>Date</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="table-body">
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    const apiUrl = '<YOUR_CRUD_CRUD_API_URL>';
+
+    function addExpense(description, amount, date) {
+      let expense = {
+        description: description,
+        amount: amount,
+        date: date
+      };
+
+      axios.post(`${apiUrl}/expenses`, expense)
+        .then(function (response) {
+          console.log('Expense added successfully:', response.data);
+          displayExpenses();
+        })
+        .catch(function (error) {
+          console.error('Failed to add expense:', error);
+        });
+    }
+
+    function deleteExpense(expenseId) {
+      axios.delete(`${apiUrl}/expenses/${expenseId}`)
+        .then(function (response) {
+          console.log('Expense deleted successfully:', response.data);
+          displayExpenses();
+        })
+        .
+        catch(function (error) {
+console.error('Failed to delete expense:', error);
+});
+}function getExpenses() {
+  return axios.get(`${apiUrl}/expenses`)
+    .then(function (response) {
+      if (response.data) {
+        return response.data;
+      } else {
+        return [];
+      }
+    })
+    .catch(function (error) {
+      console.error('Failed to get expenses:', error);
+      return [];
+    });
+}
+
+function displayExpenses() {
+  let tableBody = document.getElementById('table-body');
+  tableBody.innerHTML = '';
+
+  getExpenses()
+    .then(function (expenses) {
+      Object.keys(expenses).forEach(function (expenseId, index) {
+        let expense = expenses[expenseId];
+        let row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${expense.description}</td>
+          <td>${expense.amount}</td>
+          <td>${expense.date}</td>
+          <td>
+            <button class="btn btn-danger btn-sm" onclick="deleteExpense('${expenseId}')">Delete</button>
+          </td>
+        `;
+        tableBody.appendChild(row);
+      });
+    });
+}
+
+function filterExpenses() {
+  let fromDate = document.getElementById('from-date').value;
+  let toDate = document.getElementById('to-date').value;
+
+  getExpenses()
+    .then(function (expenses) {
+      let filteredExpenses = Object.keys(expenses).reduce(function (filtered, expenseId) {
+        let expense = expenses[expenseId];
+        if (expense.date >= fromDate && expense.date <= toDate) {
+          filtered[expenseId] = expense;
+        }
+        return filtered;
+      }, {});
+
+      let tableBody = document.getElementById('table-body');
+      tableBody.innerHTML = '';
+
+      Object.keys(filteredExpenses).forEach(function (expenseId, index) {
+        let expense = filteredExpenses[expenseId];
+        let row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${expense.description}</td>
+          <td>${expense.amount}</td>
+          <td>${expense.date}</td>
+          <td>
+            <button class="btn btn-danger btn-sm" onclick="deleteExpense('${expenseId}')">Delete</button>
+          </td>
+        `;
+        tableBody.appendChild(row);
+      });
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  displayExpenses();
+});
+
+document.getElementById('add-expense-form').addEventListener('submit', function (event) {
+  event.preventDefault();
+  let description = document.getElementById('description').value;
+  let amount = document.getElementById('amount').value;
+  let date = document.getElementById('date').value;
+  addExpense(description, amount, date);
+  this.reset();
+});
+</script>
+</body>
+</html>
